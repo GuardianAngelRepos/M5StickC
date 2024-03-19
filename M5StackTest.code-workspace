@@ -1,9 +1,20 @@
 {
   "folders": [
-	{
-		"name": "M5StackTest",
-		"path": "."
-	}
-],
-  "settings": {}
+    {
+      "name": "M5StackTest",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.associations": {
+      "*.js": "javascriptreact",
+      "*.tcc": "cpp",
+      "deque": "cpp",
+      "string": "cpp",
+      "unordered_map": "cpp",
+      "unordered_set": "cpp",
+      "vector": "cpp",
+      "system_error": "cpp"
+    }
+  }
 }
