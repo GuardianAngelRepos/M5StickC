@@ -1,5 +1,6 @@
 #include <M5StickC.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 
 
 float accX, accY, accZ;
@@ -14,11 +15,19 @@ const unsigned long printInterval = 200; // Interval for printing in millisecond
 
 unsigned int fallCount = 0; //for debugging purposes 
 
+//wifi
+const char* ssid       = "Jufa5";
+const char* password   = "47923822";
+const char* apiEndpoint = "http://your.api/endpoint";
+void connectToWiFi(); // Function declaration
+void callFallApiEndpoint(); // Function declaration
+
 
 void setup() {
   M5.begin();
   M5.IMU.Init();
   M5.IMU.getAres();
+  connectToWiFi();
 }
 
 void loop() {
@@ -71,3 +80,40 @@ void loop() {
   delay(30);
 }
 
+void connectToWiFi() {
+  Serial.print("Connecting to WiFi..");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  // Serial.println("IP address: ");
+  // Serial.println(WiFi.localIP());
+}
+
+void callFallApiEndpoint() {
+  if(WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      http.begin(apiEndpoint);
+      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+      String httpRequestData = "userId=123"; // Add your parameters here
+      int httpResponseCode = http.POST(httpRequestData); // Send the POST request
+
+      // If the POST request was successful, httpResponseCode will be positive
+      if (httpResponseCode > 0) {
+        String response = http.getString(); // Get the response to the request
+        Serial.println(httpResponseCode); // Print the response code
+        Serial.println(response); // Print the response
+      } else {
+        Serial.print("Error on sending POST: ");
+        Serial.println(httpResponseCode);
+      }
+    
+      http.end(); // Close connection
+  } else {
+    //here should be the logic for handling falls that happened on an unconnected device
+    Serial.println("Error in WiFi connection");
+  }
+}
