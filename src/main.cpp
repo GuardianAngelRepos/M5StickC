@@ -1,63 +1,73 @@
 #include <M5StickC.h>
-#include <Arduino.h>
+#include <WiFi.h>
 
-float gyroX, gyroY, gyroZ;
+
 float accX, accY, accZ;
-bool isFalling = false;
+bool potentialFallDetected = false;
 unsigned long fallStartTime = 0;
+const unsigned long minFallTime = 400;  // Adjusted minimum time in milliseconds to consider a fall
+const unsigned long maxFallTime = 1500; // Adjusted maximum time in milliseconds to confirm the fall
+const float impactThreshold = 2.0;      // Increased impact threshold for fall detection
+const float fallThreshold = 1.5;        // More sensitive threshold to start fall detection
+unsigned long nextPrintTime = 0;
+const unsigned long printInterval = 200; // Interval for printing in milliseconds
+
+unsigned int fallCount = 0; //for debugging purposes 
+
 
 void setup() {
-  // Initialize M5 and IMU
   M5.begin();
   M5.IMU.Init();
-  // Get resolution for acc and gyro
-  M5.IMU.getGres();
   M5.IMU.getAres();
 }
 
 void loop() {
-  // Gyroscope data
-  M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
-
-  // Accelerometer data
   M5.IMU.getAccelData(&accX, &accY, &accZ);
 
-  // Calculate the magnitude of the acceleration vector
-  float accMagnitude = sqrt(accX * accX + accY * accY + accZ * accZ); //1g≈9.81m/s(s al cuadrado). accMagnitude es en g 
+  float accMagnitude = sqrt(accX * accX + accY * accY + accZ * accZ);
 
   M5.Lcd.setCursor(0, 30);
   M5.Lcd.printf("accMagnitude: %.2f", accMagnitude);
 
-  // Check for fall
-  if (accMagnitude < 0.5) { // Threshold for detecting free fall (in g's, can be adjusted)
-    if (!isFalling) {
-      isFalling = true;
-      fallStartTime = millis(); // Record the time when the fall starts
-    }
-  } else if (accMagnitude > 2 && isFalling) { // Threshold for detecting impact (in g's, can be adjusted)
-    unsigned long fallTime = millis() - fallStartTime;
-    if (fallTime < 2000) { // Check if the fall and impact are within a reasonable time window (here 2 seconds)
-      // Fall detected
+  unsigned long currentTime = millis();
+
+ 
+  // if (currentTime >= nextPrintTime) {
+
+  //   nextPrintTime = currentTime + printInterval; // Schedule the next print
+  // }
+
+  if (accMagnitude < fallThreshold && !potentialFallDetected) {
+    potentialFallDetected = true;
+    fallStartTime = currentTime;
+  } else if (potentialFallDetected) {
+    unsigned long elapsedFallTime = currentTime - fallStartTime;
+
+    if (accMagnitude > impactThreshold && elapsedFallTime >= minFallTime && elapsedFallTime <= maxFallTime) {
+      //debugging
+      // Serial.print("Fall Detected! Number: ");
+      // Serial.println(fallCount); // Use println to end the line, making it easier to read
+      // fallCount++;
+
       M5.Lcd.setCursor(0, 0);
       M5.Lcd.printf("Fall detected!");
-      digitalWrite(M5_LED, HIGH);
-      delay(1000);
-      digitalWrite(M5_LED,LOW);
-      delay(4000);
-      // Clear the screen
+      M5.Lcd.fillScreen(RED);
+      delay(3000);
       M5.Lcd.fillScreen(BLACK);
-
+      potentialFallDetected = false;
+    } else if (elapsedFallTime > maxFallTime || accMagnitude > fallThreshold) {
+      // Reset fall detection if conditions are not met within the time window
+      potentialFallDetected = false;
     }
-    isFalling = false;
-  } else if (accMagnitude >= 0.5 && isFalling) {
-    // If acceleration is back to normal range without an impact, reset fall detection
-    isFalling = false;
   }
 
-  // Display the acceleration data
-  // M5.Lcd.setCursor(1, 60);
-  // M5.Lcd.printf("X acc:%5.3f\nY acc:%5.3f\nZ acc:%5.3f g",
-  //               accX, accY, accZ);
+  // testing
+  // if (accMagnitude > impactThreshold || accMagnitude < fallThreshold) {
+  //   Serial.print("Fall Detected! Number: ");
+  //   Serial.println(fallCount); // Use println to end the line, making it easier to read
+  //   fallCount++;
+  // }
 
   delay(30);
 }
+
