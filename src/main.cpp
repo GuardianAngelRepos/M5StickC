@@ -18,7 +18,7 @@ unsigned int fallCount = 0; //for debugging purposes
 //wifi
 const char* ssid       = "Jufa5";
 const char* password   = "47923822";
-const char* apiEndpoint = "http://your.api/endpoint";
+const char* apiEndpoint = "https://clownfish-app-6efb9.ondigitalocean.app/api/fall-detection";
 void connectToWiFi(); // Function declaration
 void callFallApiEndpoint(); // Function declaration
 
@@ -63,6 +63,7 @@ void loop() {
       M5.Lcd.fillScreen(RED);
       delay(3000);
       M5.Lcd.fillScreen(BLACK);
+      callFallApiEndpoint();
       potentialFallDetected = false;
     } else if (elapsedFallTime > maxFallTime || accMagnitude > fallThreshold) {
       // Reset fall detection if conditions are not met within the time window
@@ -97,9 +98,9 @@ void callFallApiEndpoint() {
   if(WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
       http.begin(apiEndpoint);
-      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-      String httpRequestData = "userId=123"; // Add your parameters here
-      int httpResponseCode = http.POST(httpRequestData); // Send the POST request
+      http.addHeader("Content-Type", "application/json");
+      String jsonBodyData = "{\"deviceId\": \"9f13890e-d3a8-4f2c-8ca0-d320553b86e8\"}";
+      int httpResponseCode = http.POST(jsonBodyData); // Send the POST request
 
       // If the POST request was successful, httpResponseCode will be positive
       if (httpResponseCode > 0) {
