@@ -16,9 +16,9 @@ const unsigned long printInterval = 200; // Interval for printing in millisecond
 unsigned int fallCount = 0; //for debugging purposes 
 
 //wifi
-const char* ssid       = "Jufa5";
-const char* password   = "47923822";
-const char* apiEndpoint = "https://clownfish-app-6efb9.ondigitalocean.app/api/fall-detection";
+const char* ssid       = "wifi-ssid";
+const char* password   = "wifi-password";
+const char* apiEndpoint = "https://server-endpoint/api/fall-detection";
 void connectToWiFi(); // Function declaration
 void callFallApiEndpoint(); // Function declaration
 
